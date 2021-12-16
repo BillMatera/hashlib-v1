@@ -4,9 +4,9 @@ const isLocal = typeof process.pkg === "undefined";
 const basePath = isLocal ? process.cwd() : path.dirname(process.execPath);
 const fs = require("fs");
 
-const AUTH = 'YOUR API KEY HERE';
-const CONTRACT_ADDRESS = 'YOUR CONTRACT ADDRESS HERE';
-const MINT_TO_ADDRESS = 'YOUR WALLET ADDRESS HERE';
+const AUTH = '89fc2294-0a7b-409a-abe9-770a4dedf409';
+const CONTRACT_ADDRESS = '0x2CbcF1457e4A74398581d7bAAb819ECEe90e63a7';
+const MINT_TO_ADDRESS = '0x3e3f8d33b2b9f0e17b089F25F20602300Ffa4c61';
 const CHAIN = 'rinkeby';
 
 const ipfsMetas = JSON.parse(
@@ -20,40 +20,43 @@ const writter = fs.createWriteStream(`${basePath}/build/minted.json`, {
 writter.write("[");
 nftCount = ipfsMetas.length;
 
-ipfsMetas.forEach((meta) => {
-  let url = "https://api.nftport.xyz/v0/mints/customizable";
+ipfsMetas.forEach((meta, index) => {
+  setTimeout(function(){
 
-  const mintInfo = {
-    chain: CHAIN,
-    contract_address: CONTRACT_ADDRESS,
-    metadata_uri: meta.metadata_uri,
-    mint_to_address: MINT_TO_ADDRESS,
-    token_id: meta.custom_fields.edition,
-  };
+    let url = "https://api.nftport.xyz/v0/mints/customizable";
 
-  let options = {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: AUTH,
-    },
-    body: JSON.stringify(mintInfo),
-  };
+    const mintInfo = {
+      chain: CHAIN,
+      contract_address: CONTRACT_ADDRESS,
+      metadata_uri: meta.metadata_uri,
+      mint_to_address: MINT_TO_ADDRESS,
+      token_id: meta.edition,
+    };
 
-  fetch(url, options)
-    .then((res) => res.json())
-    .then((json) => {
-      writter.write(JSON.stringify(json, null, 2));
-      nftCount--;
+    let options = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: AUTH,
+      },
+      body: JSON.stringify(mintInfo),
+    };
 
-      if (nftCount === 0) {
-        writter.write("]");
-        writter.end();
-      } else {
-        writter.write(",\n");
-      }
+    fetch(url, options)
+      .then((res) => res.json())
+      .then((json) => {
+        writter.write(JSON.stringify(json, null, 2));
+        nftCount--;
 
-      console.log(`Minted: ${json.transaction_external_url}`);
-    })
-    .catch((err) => console.error("error:" + err));
+        if (nftCount === 0) {
+          writter.write("]");
+          writter.end();
+        } else {
+          writter.write(",\n");
+        }
+
+        console.log(`Minted: ${json.transaction_external_url}`);
+      })
+      .catch((err) => console.error("error:" + err));
+  }, 5000 * (index + 1))
 });
